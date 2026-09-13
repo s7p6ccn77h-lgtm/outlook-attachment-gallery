@@ -3,7 +3,11 @@
 A task pane add-in that replaces Outlook's native attachment strip with a
 searchable, filterable, sortable gallery. Matches the mockup: grid/list
 toggle, file-type color coding, type filter chips, sort by name/type/size,
-multi-select, and bulk download.
+multi-select, bulk download, and a whole-thread "group by sender" view.
+
+Hosted on GitHub Pages at
+https://s7p6ccn77h-lgtm.github.io/outlook-attachment-gallery/ — repo:
+https://github.com/s7p6ccn77h-lgtm/outlook-attachment-gallery
 
 ## What's here
 
@@ -14,46 +18,37 @@ src/taskpane/taskpane.html the pane's markup
 src/taskpane/taskpane.css  styling (matches the mockup's look)
 src/taskpane/taskpane.js   Office.js logic — reads live attachments off the
                            open email, renders the gallery, handles
-                           search/filter/sort/select/download
-assets/                    placeholder icons (swap for real branding)
+                           search/filter/sort/select/download, and the
+                           EWS-based whole-thread grouping
+assets/                    icons (blue rounded square, gallery-grid glyph)
 package.json               local dev scripts
 ```
 
-## Run it locally
+## Install it in Outlook
 
-This has to run on your machine — it needs a real Outlook client (desktop,
-web, or new Outlook) and a trusted local HTTPS server, neither of which
-exist in this chat environment.
+`manifest.xml` now points at the hosted GitHub Pages URLs above, so no local
+server is needed to try it:
 
-1. **Install dependencies**
-   ```
-   npm install
-   ```
+- **Outlook on the web**: **Settings → Manage add-ins → My add-ins → Add a
+  custom add-in → Add from file**, and pick `manifest.xml` from this repo
+  (or add from URL using the raw GitHub URL to `manifest.xml`).
+- **Outlook desktop**: same "Add from file" flow via **Get Add-ins → My
+  add-ins**, or run `npm install` then `npm run sideload` from this
+  directory, which points `office-addin-debugging` at the manifest and
+  launches Outlook with it installed.
 
-2. **Trust a local dev certificate** (one-time; required because Outlook
-   only loads add-ins over HTTPS)
-   ```
-   npm run dev-certs
-   ```
+Then open any received email with attachments — you'll see an
+**Attachments** group with a **Gallery view** button on the ribbon.
 
-3. **Serve the files over HTTPS on port 3000**
-   ```
-   npm start
-   ```
-   Leave this running — `manifest.xml` points at `https://localhost:3000`.
+### Making changes
 
-4. **Sideload into Outlook**, in a second terminal:
-   ```
-   npm run sideload
-   ```
-   This opens Outlook and installs the add-in for your account automatically.
-   If you'd rather do it by hand: in Outlook on the web, go to
-   **Settings → Manage add-ins → My add-ins → Add a custom add-in → Add from
-   file**, and pick `manifest.xml`.
-
-5. Open any received email with attachments. You'll see an **Attachments**
-   group with a **Gallery view** button on the ribbon — click it to open the
-   pane.
+Any edit to `src/taskpane/*` needs to be pushed to `main` before Outlook
+sees it (GitHub Pages redeploys automatically, usually within a minute).
+For faster local iteration, run `npm run dev-certs` then `npm start` to
+serve over `https://localhost:3000`, and temporarily repoint the URLs in
+`manifest.xml` back to `localhost:3000` while you sideload it — just
+remember to point them back at the GitHub Pages URLs (or `git checkout
+manifest.xml`) before pushing.
 
 ## How the data binding works
 
@@ -104,13 +99,9 @@ sender. It works differently from the rest of the add-in:
   personal use or internal deployment; before AppSource you'd also want the
   newer JSON "unified manifest" format, which AppSource now prefers over
   this classic XML one.
-- **Hosting**: `localhost:3000` only works for local testing — see "Next
-  steps" below for moving to GitHub Pages.
 
 ## Next steps
 
-- Host on GitHub Pages and update every URL in `manifest.xml` from
-  `localhost:3000` to the real domain
 - Save-to-OneDrive via Microsoft Graph — deliberately not built yet; needs
   an Azure AD app registration (your own Microsoft/Azure admin login, not
   something that can be set up on your behalf) before the code side is
