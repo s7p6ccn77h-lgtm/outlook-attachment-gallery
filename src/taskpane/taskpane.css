@@ -282,3 +282,34 @@ body {
   font-size: 13px;
   grid-column: 1 / -1;
 }
+
+.thread-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 10px 0 2px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.thread-toggle input { cursor: pointer; }
+
+.sort-row select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.thread-group-heading {
+  margin: 14px 12px 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.thread-group-heading:first-of-type { margin-top: 4px; }
+
+.file-card--disabled {
+  cursor: default;
+  opacity: 0.55;
+}

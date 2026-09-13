@@ -27,7 +27,7 @@
     </div>
   </header>
 
-  <div class="controls">
+  <div id="controls" class="controls">
     <div class="search-box">
       <i class="ms-Icon ms-Icon--Search" aria-hidden="true"></i>
       <input id="searchInput" type="text" placeholder="Search attachments" />
@@ -44,6 +44,11 @@
         <option value="size-desc">Size (largest first)</option>
       </select>
     </div>
+
+    <label class="thread-toggle" title="Requires an Exchange mailbox. Files from other messages in the thread are view-only.">
+      <input type="checkbox" id="threadToggle" />
+      Group by sender (whole thread)
+    </label>
   </div>
 
   <div id="bulkToolbar" class="bulk-toolbar" hidden>
