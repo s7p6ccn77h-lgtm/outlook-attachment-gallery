@@ -1,0 +1,17 @@
+{
+  "name": "outlook-attachment-gallery",
+  "version": "1.0.0",
+  "description": "Outlook add-in that displays email attachments as a searchable, filterable, sortable gallery.",
+  "scripts": {
+    "dev-certs": "office-addin-dev-certs install",
+    "start": "http-server . -S -C ~/.office-addin-dev-certs/localhost.crt -K ~/.office-addin-dev-certs/localhost.key -p 3000",
+    "sideload": "office-addin-debugging start manifest.xml",
+    "validate": "office-addin-manifest validate manifest.xml"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1",
+    "office-addin-debugging": "^5.1.5",
+    "office-addin-dev-certs": "^1.13.0",
+    "office-addin-manifest": "^1.13.5"
+  }
+}

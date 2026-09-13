@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Attachment Gallery</title>
+
+  <script type="text/javascript" src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+  <link rel="stylesheet" href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-core/11.0.0/css/fabric.min.css" />
+  <link rel="stylesheet" href="taskpane.css" />
+</head>
+<body class="ms-Fabric">
+
+  <header class="app-header">
+    <div class="app-header__title">
+      <i class="ms-Icon ms-Icon--Attach" aria-hidden="true"></i>
+      <span>Attachments</span>
+      <span id="attachmentCount" class="count-badge">0</span>
+    </div>
+    <div class="view-toggle">
+      <button id="gridBtn" class="view-btn view-btn--active" aria-label="Grid view" aria-pressed="true">
+        <i class="ms-Icon ms-Icon--GridViewMedium" aria-hidden="true"></i>
+      </button>
+      <button id="listBtn" class="view-btn" aria-label="List view" aria-pressed="false">
+        <i class="ms-Icon ms-Icon--BulletedList" aria-hidden="true"></i>
+      </button>
+    </div>
+  </header>
+
+  <div class="controls">
+    <div class="search-box">
+      <i class="ms-Icon ms-Icon--Search" aria-hidden="true"></i>
+      <input id="searchInput" type="text" placeholder="Search attachments" />
+    </div>
+
+    <div id="typeChips" class="type-chips" role="group" aria-label="Filter by file type"></div>
+
+    <div class="sort-row">
+      <i class="ms-Icon ms-Icon--Sort" aria-hidden="true"></i>
+      <select id="sortSelect" aria-label="Sort attachments">
+        <option value="name-asc">Name (A to Z)</option>
+        <option value="name-desc">Name (Z to A)</option>
+        <option value="type">Type</option>
+        <option value="size-desc">Size (largest first)</option>
+      </select>
+    </div>
+  </div>
+
+  <div id="bulkToolbar" class="bulk-toolbar" hidden>
+    <span id="selectionCount"></span>
+    <button id="downloadSelectedBtn" class="primary-btn">
+      <i class="ms-Icon ms-Icon--Download" aria-hidden="true"></i>
+      Download
+    </button>
+  </div>
+
+  <main id="statusMessage" class="status-message">Loading attachments&hellip;</main>
+  <main id="galleryContainer" class="gallery-container" hidden></main>
+
+  <script type="text/javascript" src="taskpane.js"></script>
+</body>
+</html>
