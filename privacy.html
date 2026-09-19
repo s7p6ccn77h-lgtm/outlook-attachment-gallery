@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Attachment Gallery – Privacy Policy</title>
+<style>
+  body { max-width: 720px; margin: 2rem auto; padding: 0 1rem; font: 16px/1.6 -apple-system, "Segoe UI", Roboto, sans-serif; color: #252423; }
+  h1 { font-size: 1.7rem; margin-bottom: .2rem; }
+  h2 { font-size: 1.15rem; margin-top: 2rem; }
+  .meta { color: #605E5C; margin-top: 0; }
+  .summary { background: #EEEDFE; border-radius: 8px; padding: 1rem 1.2rem; }
+  code { background: #F3F2F1; padding: 0 .3em; border-radius: 3px; }
+  a { color: #3D3557; }
+</style>
+</head>
+<body>
+<h1>Attachment Gallery – Privacy Policy</h1>
+<p class="meta">Effective September 19, 2026</p>
+
+<div class="summary">
+  <strong>In short:</strong> Attachment Gallery works entirely inside Outlook on your device.
+  It does not send your emails, attachments, or any other data to us or to anyone else, and
+  it has no server, account, analytics, or advertising.
+</div>
+
+<h2>What the add-in accesses</h2>
+<p>When you open the Attachment Gallery pane on an email, the add-in reads, through Outlook's
+add-in interface, information about the <strong>currently open message only</strong>: the names,
+sizes, and types of its attachments and, if you use the search box, the contents of those
+attachments so that it can find your search words inside them. It requests the minimum
+permission Outlook offers for this (<code>ReadItem</code>). It cannot send, move, edit, or delete
+email, and it cannot read messages other than the one you have open.</p>
+
+<h2>How that information is used</h2>
+<p>Everything is processed locally in the add-in pane, in your device's memory. Text is extracted
+from attachments on your device (Word, Excel, PowerPoint, PDF, and plain-text files) purely to
+power the search you type. That text is not saved to disk, is not transmitted anywhere, and is
+discarded when you switch to another email or close the pane. If you choose to download an
+attachment, it is saved to your device by your browser or Outlook, exactly as if you had
+downloaded it from Outlook directly.</p>
+
+<h2>What we collect</h2>
+<p>Nothing. We do not collect, store, sell, share, or have access to your emails, attachments,
+search terms, or usage. The add-in does not use cookies, tracking, analytics, or advertising,
+and it does not require you to create an account.</p>
+
+<h2>Third parties and hosting</h2>
+<ul>
+  <li><strong>GitHub Pages</strong> hosts the add-in's files (its web page, scripts, and icons). Like
+  any website host, GitHub may log technical information such as your IP address when your
+  Outlook client loads those files. See <a href="https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement">GitHub's privacy statement</a>.</li>
+  <li><strong>Microsoft</strong> provides Outlook and the <code>office.js</code> library the add-in loads
+  from <code>appsforoffice.microsoft.com</code>. Microsoft may collect diagnostic data under its own
+  terms; see <a href="https://privacy.microsoft.com/">Microsoft's privacy statement</a>. We do not control this.</li>
+  <li>The add-in's other code, including the libraries used to read Word, Excel, PowerPoint, and PDF
+  files, is bundled with the add-in and served from the same host. No third-party content-delivery
+  network receives your data.</li>
+</ul>
+
+<h2>Security</h2>
+<p>All files are served over HTTPS. The add-in page declares a strict Content Security Policy that
+prevents it from loading scripts from, or sending data to, servers other than its own host and
+Microsoft's Office and Outlook services.</p>
+
+<h2>Retention</h2>
+<p>We keep no data, so there is nothing to retain or delete. Removing the add-in from Outlook
+removes it completely.</p>
+
+<h2>Children</h2>
+<p>The add-in is a general productivity tool and does not knowingly collect information from anyone,
+including children.</p>
+
+<h2>Changes to this policy</h2>
+<p>If the add-in's behavior changes in a way that affects your privacy, this page will be updated
+and the effective date above will change.</p>
+
+<h2>Contact</h2>
+<p>Questions or concerns: please open an issue at
+<a href="https://github.com/s7p6ccn77h-lgtm/outlook-attachment-gallery/issues">github.com/s7p6ccn77h-lgtm/outlook-attachment-gallery/issues</a>.</p>
+</body>
+</html>
