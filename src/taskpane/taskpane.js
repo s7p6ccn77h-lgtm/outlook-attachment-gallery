@@ -1,18 +1,37 @@
 /* global Office, document, canExtractText, extractText, base64ToBytes */
 
 const TYPE_META = {
-  docx: { icon: "ms-Icon--WordDocument", bg: "var(--blue-bg)", fg: "var(--blue-fg)", label: "Word" },
-  doc: { icon: "ms-Icon--WordDocument", bg: "var(--blue-bg)", fg: "var(--blue-fg)", label: "Word" },
-  xlsx: { icon: "ms-Icon--ExcelDocument", bg: "var(--green-bg)", fg: "var(--green-fg)", label: "Excel" },
-  xls: { icon: "ms-Icon--ExcelDocument", bg: "var(--green-bg)", fg: "var(--green-fg)", label: "Excel" },
-  pptx: { icon: "ms-Icon--PowerPointDocument", bg: "var(--coral-bg)", fg: "var(--coral-fg)", label: "PowerPoint" },
-  ppt: { icon: "ms-Icon--PowerPointDocument", bg: "var(--coral-bg)", fg: "var(--coral-fg)", label: "PowerPoint" },
-  pdf: { icon: "ms-Icon--PDF", bg: "var(--red-bg)", fg: "var(--red-fg)", label: "PDF" },
-  png: { icon: "ms-Icon--FileImage", bg: "var(--purple-bg)", fg: "var(--purple-fg)", label: "Image" },
-  jpg: { icon: "ms-Icon--FileImage", bg: "var(--purple-bg)", fg: "var(--purple-fg)", label: "Image" },
-  jpeg: { icon: "ms-Icon--FileImage", bg: "var(--purple-bg)", fg: "var(--purple-fg)", label: "Image" },
-  default: { icon: "ms-Icon--Page", bg: "#F3F2F1", fg: "#605E5C", label: "File" },
+  docx: { glyph: "word", bg: "var(--blue-bg)", fg: "var(--blue-fg)", label: "Word" },
+  doc: { glyph: "word", bg: "var(--blue-bg)", fg: "var(--blue-fg)", label: "Word" },
+  xlsx: { glyph: "excel", bg: "var(--green-bg)", fg: "var(--green-fg)", label: "Excel" },
+  xls: { glyph: "excel", bg: "var(--green-bg)", fg: "var(--green-fg)", label: "Excel" },
+  pptx: { glyph: "ppt", bg: "var(--coral-bg)", fg: "var(--coral-fg)", label: "PowerPoint" },
+  ppt: { glyph: "ppt", bg: "var(--coral-bg)", fg: "var(--coral-fg)", label: "PowerPoint" },
+  pdf: { glyph: "pdf", bg: "var(--red-bg)", fg: "var(--red-fg)", label: "PDF" },
+  png: { glyph: "image", bg: "var(--purple-bg)", fg: "var(--purple-fg)", label: "Image" },
+  jpg: { glyph: "image", bg: "var(--purple-bg)", fg: "var(--purple-fg)", label: "Image" },
+  jpeg: { glyph: "image", bg: "var(--purple-bg)", fg: "var(--purple-fg)", label: "Image" },
+  default: { glyph: "page", bg: "#F3F2F1", fg: "#605E5C", label: "File" },
 };
+
+// Inline SVG icons (drawn here, so the pane needs no icon font or third-party stylesheet).
+const ICON_ATTRS = 'viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"';
+const PAGE_OUTLINE = '<path d="M4 1.75h5l3 3v9.5H4z"/><path d="M9 1.75v3h3"/>';
+const LETTER = (t, size) =>
+  `<text x="8" y="12.3" font-size="${size}" font-weight="700" text-anchor="middle" fill="currentColor" stroke="none" font-family="Segoe UI, Arial, sans-serif">${t}</text>`;
+const ICONS = {
+  page: PAGE_OUTLINE + '<path d="M6.2 8.5h3.6M6.2 10.5h3.6"/>',
+  word: PAGE_OUTLINE + LETTER("W", 5.6),
+  excel: PAGE_OUTLINE + LETTER("X", 5.6),
+  ppt: PAGE_OUTLINE + LETTER("P", 5.6),
+  pdf: PAGE_OUTLINE + LETTER("PDF", 3.4),
+  image: '<rect x="2" y="3" width="12" height="10" rx="1.5"/><circle cx="5.6" cy="6.6" r="1"/><path d="M2.6 12l3.6-3.6 2.4 2.4 2-2 3.2 3.2"/>',
+  check: '<path d="M3.5 8.5l3 3 6-7"/>',
+};
+
+function svgIcon(name, px) {
+  return `<svg width="${px}" height="${px}" ${ICON_ATTRS}>${ICONS[name]}</svg>`;
+}
 
 let rawAttachments = [];
 let view = "grid";
@@ -288,12 +307,13 @@ function buildCard(a, terms) {
 
   const checkbox = document.createElement("div");
   checkbox.className = "file-card__checkbox";
-  checkbox.innerHTML = isSelected ? '<i class="ms-Icon ms-Icon--CheckMark" aria-hidden="true"></i>' : "";
+  checkbox.innerHTML = isSelected ? svgIcon("check", 11) : "";
 
   const icon = document.createElement("div");
   icon.className = "file-icon";
   icon.style.background = m.bg;
-  icon.innerHTML = `<i class="ms-Icon ${m.icon}" style="font-size:16px;color:${m.fg};" aria-hidden="true"></i>`;
+  icon.innerHTML = svgIcon(m.glyph, 18);
+  icon.style.color = m.fg;
 
   const textWrap = document.createElement("div");
   textWrap.className = "file-text";

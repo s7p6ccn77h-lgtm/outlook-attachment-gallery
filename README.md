@@ -22,6 +22,10 @@ src/taskpane/taskpane.js   Office.js logic — reads live attachments off the
                            search/filter/sort/select/download
 src/taskpane/extract.js    pulls plain text out of attachments for content
                            search (docx/xlsx/pptx via JSZip, pdf via PDF.js)
+src/taskpane/vendor/       bundled, pinned copies of JSZip and PDF.js + licenses
+privacy.html               privacy policy (served at /privacy.html)
+LICENSE                    all rights reserved
+THIRD_PARTY_NOTICES.md     licenses/checksums for the bundled libraries
 assets/                    icons (blue rounded square, gallery-grid glyph)
 package.json               local dev scripts
 ```
@@ -82,10 +86,36 @@ somewhere in the name or contents (case-insensitive).
 - Name-only: images, scanned PDFs (no text layer, would need OCR), legacy
   `.doc`/`.xls`/`.ppt`, password-protected files, and anything over 25 MB.
 - Everything happens inside the task pane — file contents are never sent
-  anywhere. JSZip and PDF.js are loaded from cdnjs the first time you
-  search, so the pane needs internet access for that.
+  anywhere. JSZip and PDF.js are bundled in `src/taskpane/vendor/` (pinned
+  versions, see `THIRD_PARTY_NOTICES.md`), so no CDN is involved.
 - Only the open message's attachments are read, and the index is discarded
   when you switch emails.
+
+## Security and privacy
+
+- **No backend.** Nothing about your email or attachments leaves the pane.
+  Privacy policy: `privacy.html` (served at
+  https://s7p6ccn77h-lgtm.github.io/outlook-attachment-gallery/privacy.html).
+- **Least privilege.** The manifest requests only `ReadItem`.
+- **Content Security Policy** (a `<meta>` tag in `taskpane.html`): scripts may
+  only come from this site and `appsforoffice.microsoft.com` (Outlook's
+  required `office.js`); styles only from this site; no `eval`; outbound
+  requests only to this site and Microsoft's Office/Outlook domains; forms,
+  plugins, and `<base>` disabled. Icons are inline SVG, so there is no
+  external icon font or stylesheet. Expect two harmless console messages
+  from `office.js` itself (its telemetry iframe and one inline style are
+  blocked by the policy).
+- **Supply chain.** The only code that runs from another origin is Microsoft's
+  `office.js`. Anyone who can push to `main` controls what runs in the pane,
+  so protect the GitHub account with 2FA/a passkey.
+- Do not add a `<script>`, stylesheet, image, or font from a new origin
+  without also updating the policy.
+
+## License
+
+Copyright (c) 2026 Simon Borumand. All rights reserved — see `LICENSE`. The
+repo is public only because GitHub Pages (free) requires it; that does not
+grant any license. Bundled third-party libraries keep their own licenses.
 
 ## Known limitations to fix before shipping
 

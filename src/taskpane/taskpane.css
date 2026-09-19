@@ -88,7 +88,7 @@ body {
   align-items: center;
 }
 
-.search-box i {
+.search-box svg {
   position: absolute;
   left: 9px;
   font-size: 13px;
@@ -228,7 +228,7 @@ body {
   border-color: var(--accent);
 }
 
-.file-card__checkbox i { font-size: 10px; color: #fff; }
+.file-card__checkbox svg { color: #fff; }
 
 .file-icon {
   width: 32px;
@@ -319,3 +319,6 @@ body {
   padding: 0 1px;
   border-radius: 2px;
 }
+
+.sort-row svg { flex-shrink: 0; color: var(--text-secondary); }
+.app-header__title svg { flex-shrink: 0; }
