@@ -270,9 +270,10 @@ function startIndexing() {
         if (gen !== indexGeneration) return;
         contentIndex.set(a.id, { status: "done", text, lower: text.toLowerCase() });
       })
-      .catch(() => {
+      .catch((err) => {
         if (gen !== indexGeneration) return;
-        contentIndex.set(a.id, { status: "error", text: "", lower: "" });
+        const reason = String((err && (err.message || err.name)) || err).slice(0, 160);
+        contentIndex.set(a.id, { status: "error", text: "", lower: "", reason });
       })
       .then(() => {
         if (gen !== indexGeneration) return;
@@ -297,12 +298,17 @@ function updateSearchStatus() {
   const nameOnly = entries.length - done - pending;
 
   el.hidden = false;
+  const failed = rawAttachments.filter((a) => (contentIndex.get(a.id) || {}).status === "error");
+  const failNote = failed.length
+    ? ` Couldn't read ${failed[0].name}: ${contentIndex.get(failed[0].id).reason}` +
+      (failed.length > 1 ? ` (+${failed.length - 1} more)` : "")
+    : "";
   if (pending > 0) {
-    el.textContent = `Reading file contents… ${done} of ${done + pending} done`;
+    el.textContent = `Reading file contents… ${done} of ${done + pending} done.${failNote}`;
   } else if (nameOnly > 0) {
-    el.textContent = `Searched names and contents of ${done} file${done === 1 ? "" : "s"}; ${nameOnly} matched by name only`;
+    el.textContent = `Searched names and contents of ${done} file${done === 1 ? "" : "s"}; ${nameOnly} matched by name only.${failNote}`;
   } else {
-    el.textContent = "Searched names and contents";
+    el.textContent = "Searched names and contents." + failNote;
   }
 }
 
