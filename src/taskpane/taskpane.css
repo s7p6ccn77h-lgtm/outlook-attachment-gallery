@@ -315,3 +315,10 @@ body {
   cursor: default;
   opacity: 0.55;
 }
+
+.debug-info {
+  padding: 8px 12px;
+  font-size: 10px;
+  color: var(--text-muted);
+  word-break: break-word;
+}

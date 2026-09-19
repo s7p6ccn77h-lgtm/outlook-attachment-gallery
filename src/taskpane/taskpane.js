@@ -28,15 +28,32 @@ let threadMode = false;
 let threadGroups = null; // [{ senderName, senderEmail, items: [{ name, size, sourceAttachment }] }]
 let threadStatus = ""; // "" | "loading" | "error"
 
+const BUILD = "3";
+let itemChangedCount = 0;
+let handlerStatus = "not registered";
+
+function updateDebug() {
+  const el = document.getElementById("debugInfo");
+  if (!el) return;
+  const item = Office.context.mailbox.item;
+  const subject = item && item.subject ? item.subject : "(none)";
+  el.textContent = `build ${BUILD} | item-changed listener: ${handlerStatus} | switches seen: ${itemChangedCount} | subject: ${subject}`;
+}
+
 Office.onReady((info) => {
   if (info.host === Office.HostType.Outlook) {
     loadAttachments();
     wireStaticControls();
-    Office.context.mailbox.addHandlerAsync(Office.EventType.ItemChanged, onItemChanged);
+    Office.context.mailbox.addHandlerAsync(Office.EventType.ItemChanged, onItemChanged, (r) => {
+      handlerStatus = r.status === Office.AsyncResultStatus.Succeeded ? "registered" : "FAILED: " + (r.error && r.error.message);
+      updateDebug();
+    });
+    updateDebug();
   }
 });
 
 function onItemChanged() {
+  itemChangedCount++;
   query = "";
   activeType = "all";
   selected = new Set();
@@ -46,6 +63,7 @@ function onItemChanged() {
     loadThread();
   }
   loadAttachments();
+  updateDebug();
 }
 
 function wireStaticControls() {
