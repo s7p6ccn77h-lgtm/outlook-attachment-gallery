@@ -3,10 +3,10 @@
 // Bundled in ./vendor (pinned: JSZip 3.10.1, PDF.js 6.3.289 legacy build) so no third-party CDN ever sees
 // or can tamper with attachment content. Paths resolve relative to taskpane.html.
 const LIBS = {
-  jszip: "vendor/jszip.min.js?v=13",
-  pdf: "./vendor/pdf.min.mjs?v=13",
+  jszip: "vendor/jszip.min.js?v=14",
+  pdf: "./vendor/pdf.min.mjs?v=14",
   // Absolute on purpose: a path like "vendor/x.mjs" is a *bare specifier* to import() and fails.
-  pdfWorker: new URL("vendor/pdf.worker.min.mjs?v=13", document.baseURI).href,
+  pdfWorker: new URL("vendor/pdf.worker.min.mjs?v=14", document.baseURI).href,
 };
 
 const TEXT_EXTS = new Set(["txt", "csv", "tsv", "md", "json", "xml", "log", "html", "htm"]);

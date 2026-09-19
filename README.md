@@ -97,19 +97,25 @@ somewhere in the name or contents (case-insensitive).
   Privacy policy: `privacy.html` (served at
   https://s7p6ccn77h-lgtm.github.io/outlook-attachment-gallery/privacy.html).
 - **Least privilege.** The manifest requests only `ReadItem`.
-- **Content Security Policy: currently not applied.** A strict policy
-  (scripts only from this site and `appsforoffice.microsoft.com`, no `eval`,
-  outbound requests only to this site and Microsoft) passed every browser
-  test, but in real Outlook for Mac the pane never finished starting
-  ("Loading attachments…" forever), so it was removed. Re-adding one needs
-  the real violations captured from inside Outlook. Icons are inline SVG and
-  libraries are bundled, so the pane already loads nothing third-party except
-  `office.js`.
+- **Content Security Policy** (a `<meta>` tag at the top of `taskpane.html`):
+  scripts only from this site, `appsforoffice.microsoft.com` (`office.js`)
+  and `ajax.aspnetcdn.com` (Outlook for Mac's `office.js` loads
+  `MicrosoftAjax.js` from there — without it the Mac pane never starts);
+  styles only from this site; outbound connections only to this site and
+  Microsoft's Office/Outlook domains; no forms, plugins, or `<base>`.
+  Icons are inline SVG and libraries are bundled, so nothing else is loaded.
+  It was found empirically with the "Attaché CSP test" diagnostic add-in
+  (`manifest-csp-test.xml`, `csp-test.html`, `csp-init.js`), which applies
+  candidate policies and lists what Outlook tries to load that they block.
+  Known, harmless: `MicrosoftAjax.js` tries to use `eval` (blocked; Office
+  works without it), and in a plain browser (not Outlook) `office.js` also
+  trips over a telemetry iframe and one inline style.
 - **Supply chain.** The only code that runs from another origin is Microsoft's
   `office.js`. Anyone who can push to `main` controls what runs in the pane,
   so protect the GitHub account with 2FA/a passkey.
-- Do not add a `<script>`, stylesheet, image, or font from a third-party
-  origin.
+- Do not add a `<script>`, stylesheet, image, or font from a new origin
+  without updating the policy — and re-test in Outlook for Mac, which needs
+  more Microsoft hosts than Outlook on the web does.
 
 ## License
 
