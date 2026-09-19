@@ -1,9 +1,11 @@
 /* global JSZip, pdfjsLib, DOMParser, TextDecoder */
 
+// Bundled in ./vendor (pinned: JSZip 3.10.1, PDF.js 3.11.174) so no third-party CDN ever sees
+// or can tamper with attachment content. Paths resolve relative to taskpane.html.
 const LIBS = {
-  jszip: "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js",
-  pdf: "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js",
-  pdfWorker: "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js",
+  jszip: "vendor/jszip.min.js?v=7",
+  pdf: "vendor/pdf.min.js?v=7",
+  pdfWorker: "vendor/pdf.worker.min.js?v=7",
 };
 
 const TEXT_EXTS = new Set(["txt", "csv", "tsv", "md", "json", "xml", "log", "html", "htm"]);
@@ -91,11 +93,8 @@ async function extractXlsx(bytes) {
 
 async function extractPdf(bytes) {
   await loadScript(LIBS.pdf);
-  if (!pdfjsLib.GlobalWorkerOptions.workerSrc) {
-    const code = await (await fetch(LIBS.pdfWorker)).text();
-    pdfjsLib.GlobalWorkerOptions.workerSrc = URL.createObjectURL(new Blob([code], { type: "text/javascript" }));
-  }
-  const pdf = await pdfjsLib.getDocument({ data: bytes }).promise;
+  pdfjsLib.GlobalWorkerOptions.workerSrc = LIBS.pdfWorker;
+  const pdf = await pdfjsLib.getDocument({ data: bytes, isEvalSupported: false }).promise;
   const pages = Math.min(pdf.numPages, MAX_PDF_PAGES);
   const chunks = [];
   for (let p = 1; p <= pages; p++) {
