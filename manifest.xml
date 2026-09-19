@@ -12,8 +12,8 @@
   <DefaultLocale>en-US</DefaultLocale>
   <DisplayName DefaultValue="Attaché" />
   <Description DefaultValue="View, filter, sort, and download email attachments as a gallery instead of the cramped native list." />
-  <IconUrl DefaultValue="https://s7p6ccn77h-lgtm.github.io/outlook-attachment-gallery/assets/icon-64.png?v=12" />
-  <HighResolutionIconUrl DefaultValue="https://s7p6ccn77h-lgtm.github.io/outlook-attachment-gallery/assets/icon-128.png?v=12" />
+  <IconUrl DefaultValue="https://s7p6ccn77h-lgtm.github.io/outlook-attachment-gallery/assets/icon-64.png?v=13" />
+  <HighResolutionIconUrl DefaultValue="https://s7p6ccn77h-lgtm.github.io/outlook-attachment-gallery/assets/icon-128.png?v=13" />
   <SupportUrl DefaultValue="https://github.com/s7p6ccn77h-lgtm/outlook-attachment-gallery" />
 
   <AppDomains>
@@ -33,7 +33,7 @@
   <FormSettings>
     <Form xsi:type="ItemRead">
       <DesktopSettings>
-        <SourceLocation DefaultValue="https://s7p6ccn77h-lgtm.github.io/outlook-attachment-gallery/src/taskpane/taskpane.html?v=12" />
+        <SourceLocation DefaultValue="https://s7p6ccn77h-lgtm.github.io/outlook-attachment-gallery/src/taskpane/taskpane.html?v=13" />
         <RequestedHeight>250</RequestedHeight>
       </DesktopSettings>
     </Form>
@@ -91,13 +91,13 @@
 
       <Resources>
         <bt:Images>
-          <bt:Image id="Icon.16x16" DefaultValue="https://s7p6ccn77h-lgtm.github.io/outlook-attachment-gallery/assets/icon-16.png?v=12" />
-          <bt:Image id="Icon.32x32" DefaultValue="https://s7p6ccn77h-lgtm.github.io/outlook-attachment-gallery/assets/icon-32.png?v=12" />
-          <bt:Image id="Icon.80x80" DefaultValue="https://s7p6ccn77h-lgtm.github.io/outlook-attachment-gallery/assets/icon-80.png?v=12" />
+          <bt:Image id="Icon.16x16" DefaultValue="https://s7p6ccn77h-lgtm.github.io/outlook-attachment-gallery/assets/icon-16.png?v=13" />
+          <bt:Image id="Icon.32x32" DefaultValue="https://s7p6ccn77h-lgtm.github.io/outlook-attachment-gallery/assets/icon-32.png?v=13" />
+          <bt:Image id="Icon.80x80" DefaultValue="https://s7p6ccn77h-lgtm.github.io/outlook-attachment-gallery/assets/icon-80.png?v=13" />
         </bt:Images>
         <bt:Urls>
-          <bt:Url id="Commands.Url" DefaultValue="https://s7p6ccn77h-lgtm.github.io/outlook-attachment-gallery/src/taskpane/taskpane.html?v=12" />
-          <bt:Url id="Taskpane.Url" DefaultValue="https://s7p6ccn77h-lgtm.github.io/outlook-attachment-gallery/src/taskpane/taskpane.html?v=12" />
+          <bt:Url id="Commands.Url" DefaultValue="https://s7p6ccn77h-lgtm.github.io/outlook-attachment-gallery/src/taskpane/taskpane.html?v=13" />
+          <bt:Url id="Taskpane.Url" DefaultValue="https://s7p6ccn77h-lgtm.github.io/outlook-attachment-gallery/src/taskpane/taskpane.html?v=13" />
         </bt:Urls>
         <bt:ShortStrings>
           <bt:String id="GroupLabel" DefaultValue="Attaché" />

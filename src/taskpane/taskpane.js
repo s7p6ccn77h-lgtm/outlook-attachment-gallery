@@ -272,8 +272,15 @@ function startIndexing() {
       })
       .catch((err) => {
         if (gen !== indexGeneration) return;
-        const reason = String((err && (err.message || err.name)) || err).slice(0, 160);
-        contentIndex.set(a.id, { status: "error", text: "", lower: "", reason });
+        const message = String((err && (err.message || err.name)) || err).slice(0, 160);
+        const where = String((err && err.stack) || "")
+          .split("\n")
+          .slice(0, 4)
+          .map((l) => l.replace(/https?:\/\/[^\s@)]*\//g, ""))
+          .join(" | ");
+        const reason = message;
+        const detail = message + (where ? " [" + where + "]" : "");
+        contentIndex.set(a.id, { status: "error", text: "", lower: "", reason, detail });
       })
       .then(() => {
         if (gen !== indexGeneration) return;
@@ -299,6 +306,7 @@ function updateSearchStatus() {
 
   el.hidden = false;
   const failed = rawAttachments.filter((a) => (contentIndex.get(a.id) || {}).status === "error");
+  el.title = failed.length ? contentIndex.get(failed[0].id).detail || "" : "";
   const failNote = failed.length
     ? ` Couldn't read ${failed[0].name}: ${contentIndex.get(failed[0].id).reason}` +
       (failed.length > 1 ? ` (+${failed.length - 1} more)` : "")

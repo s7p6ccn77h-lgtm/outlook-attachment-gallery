@@ -3,10 +3,10 @@
 // Bundled in ./vendor (pinned: JSZip 3.10.1, PDF.js 6.3.289 legacy build) so no third-party CDN ever sees
 // or can tamper with attachment content. Paths resolve relative to taskpane.html.
 const LIBS = {
-  jszip: "vendor/jszip.min.js?v=12",
-  pdf: "./vendor/pdf.min.mjs?v=12",
+  jszip: "vendor/jszip.min.js?v=13",
+  pdf: "./vendor/pdf.min.mjs?v=13",
   // Absolute on purpose: a path like "vendor/x.mjs" is a *bare specifier* to import() and fails.
-  pdfWorker: new URL("vendor/pdf.worker.min.mjs?v=12", document.baseURI).href,
+  pdfWorker: new URL("vendor/pdf.worker.min.mjs?v=13", document.baseURI).href,
 };
 
 const TEXT_EXTS = new Set(["txt", "csv", "tsv", "md", "json", "xml", "log", "html", "htm"]);
@@ -114,8 +114,14 @@ async function extractPdf(bytes) {
     const chunks = [];
     for (let p = 1; p <= pages; p++) {
       const page = await pdf.getPage(p);
-      const content = await page.getTextContent();
-      chunks.push(content.items.map((it) => it.str).join(" "));
+      // page.getTextContent() loops with `for await` over a ReadableStream, which not every embedded
+      // browser supports; reading the same stream manually works everywhere.
+      const reader = page.streamTextContent().getReader();
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        for (const item of value.items) if (typeof item.str === "string") chunks.push(item.str);
+      }
     }
     return chunks.join(" ");
   } finally {
