@@ -29,13 +29,18 @@ package.json               local dev scripts
 `manifest.xml` now points at the hosted GitHub Pages URLs above, so no local
 server is needed to try it:
 
-- **Outlook on the web**: **Settings → Manage add-ins → My add-ins → Add a
-  custom add-in → Add from file**, and pick `manifest.xml` from this repo
-  (or add from URL using the raw GitHub URL to `manifest.xml`).
-- **Outlook desktop**: same "Add from file" flow via **Get Add-ins → My
-  add-ins**, or run `npm install` then `npm run sideload` from this
-  directory, which points `office-addin-debugging` at the manifest and
-  launches Outlook with it installed.
+- **Outlook on the web**: open the add-ins dialog (the apps grid icon on
+  the left rail or ribbon, or https://aka.ms/olksideload), then **My
+  add-ins → Custom add-ins → Add a custom add-in → Add from file**, and pick
+  `manifest.xml` from this repo. Personal accounts don't offer "Add from
+  URL". Add-ins installed this way sync to the desktop apps after a
+  restart.
+- **Outlook for Mac**: `npm run sideload` does not support it
+  ("Sideload to the Outlook app is not supported"), so install via the web
+  route above and restart the app.
+- After changing `manifest.xml`, remove and re-add the add-in — Outlook
+  caches the old manifest. Bump `?v=N` on the URLs and the manifest
+  `<Version>` to defeat cached copies of the pane itself.
 
 Then open any received email with attachments — you'll see an
 **Attachments** group with a **Gallery view** button on the ribbon.
@@ -96,9 +101,10 @@ sender. It works differently from the rest of the add-in:
   Close and reopen **Gallery view** for each email there. Pinning is
   supported in Outlook for Mac, Windows, and work/school Outlook on the
   web, where the refresh-on-switch logic should work.
-- **Permissions**: manifest requests `ReadWriteItem`. If you add features
-  like moving attachments to OneDrive, you'll need broader Graph permissions
-  (and an Azure AD app registration) — Office.js alone can't call Graph.
+- **Permissions**: manifest requests `ReadWriteMailbox`, which
+  `makeEwsRequestAsync` (whole-thread view) requires. Moving attachments to
+  OneDrive would additionally need Graph permissions and an Azure AD app
+  registration — Office.js alone can't call Graph.
 - **Compose-mode download** isn't wired up — `getAttachmentContentAsync`
   behaves differently before a message is sent, and most galleries only need
   read mode anyway.
