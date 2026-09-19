@@ -10,7 +10,7 @@
   },
   "devDependencies": {
     "http-server": "^14.1.1",
-    "office-addin-debugging": "^5.1.5",
+    "office-addin-debugging": "^7.0.0",
     "office-addin-dev-certs": "^1.13.0",
     "office-addin-manifest": "^1.13.5"
   }
