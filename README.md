@@ -97,19 +97,19 @@ somewhere in the name or contents (case-insensitive).
   Privacy policy: `privacy.html` (served at
   https://s7p6ccn77h-lgtm.github.io/outlook-attachment-gallery/privacy.html).
 - **Least privilege.** The manifest requests only `ReadItem`.
-- **Content Security Policy** (a `<meta>` tag in `taskpane.html`): scripts may
-  only come from this site and `appsforoffice.microsoft.com` (Outlook's
-  required `office.js`); styles only from this site; no `eval`; outbound
-  requests only to this site and Microsoft's Office/Outlook domains; forms,
-  plugins, and `<base>` disabled. Icons are inline SVG, so there is no
-  external icon font or stylesheet. Expect two harmless console messages
-  from `office.js` itself (its telemetry iframe and one inline style are
-  blocked by the policy).
+- **Content Security Policy: currently not applied.** A strict policy
+  (scripts only from this site and `appsforoffice.microsoft.com`, no `eval`,
+  outbound requests only to this site and Microsoft) passed every browser
+  test, but in real Outlook for Mac the pane never finished starting
+  ("Loading attachments…" forever), so it was removed. Re-adding one needs
+  the real violations captured from inside Outlook. Icons are inline SVG and
+  libraries are bundled, so the pane already loads nothing third-party except
+  `office.js`.
 - **Supply chain.** The only code that runs from another origin is Microsoft's
   `office.js`. Anyone who can push to `main` controls what runs in the pane,
   so protect the GitHub account with 2FA/a passkey.
-- Do not add a `<script>`, stylesheet, image, or font from a new origin
-  without also updating the policy.
+- Do not add a `<script>`, stylesheet, image, or font from a third-party
+  origin.
 
 ## License
 

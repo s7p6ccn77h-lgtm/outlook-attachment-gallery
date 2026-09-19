@@ -3,9 +3,9 @@
 // Bundled in ./vendor (pinned: JSZip 3.10.1, PDF.js 6.3.289 legacy build) so no third-party CDN ever sees
 // or can tamper with attachment content. Paths resolve relative to taskpane.html.
 const LIBS = {
-  jszip: "vendor/jszip.min.js?v=10",
-  pdf: "./vendor/pdf.min.mjs?v=10",
-  pdfWorker: "vendor/pdf.worker.min.mjs?v=10",
+  jszip: "vendor/jszip.min.js?v=11",
+  pdf: "./vendor/pdf.min.mjs?v=11",
+  pdfWorker: "vendor/pdf.worker.min.mjs?v=11",
 };
 
 const TEXT_EXTS = new Set(["txt", "csv", "tsv", "md", "json", "xml", "log", "html", "htm"]);

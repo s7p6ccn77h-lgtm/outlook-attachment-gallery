@@ -2,23 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta http-equiv="Content-Security-Policy" content="
-    default-src 'self';
-    script-src 'self' https://appsforoffice.microsoft.com;
-    style-src 'self';
-    img-src 'self' data:;
-    connect-src 'self' https://appsforoffice.microsoft.com https://*.microsoft.com https://*.office.com https://*.office.net https://*.outlook.com https://*.live.com;
-    frame-src 'self' https://appsforoffice.microsoft.com;
-    worker-src 'self';
-    object-src 'none';
-    base-uri 'none';
-    form-action 'none'
-  " />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Attache</title>
 
   <script type="text/javascript" src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
-  <link rel="stylesheet" href="taskpane.css?v=10" />
+  <link rel="stylesheet" href="taskpane.css?v=11" />
 </head>
 <body>
 
@@ -70,7 +58,7 @@
   <main id="statusMessage" class="status-message">Loading attachments&hellip;</main>
   <main id="galleryContainer" class="gallery-container" hidden></main>
 
-  <script type="text/javascript" src="extract.js?v=10"></script>
-  <script type="text/javascript" src="taskpane.js?v=10"></script>
+  <script type="text/javascript" src="extract.js?v=11"></script>
+  <script type="text/javascript" src="taskpane.js?v=11"></script>
 </body>
 </html>

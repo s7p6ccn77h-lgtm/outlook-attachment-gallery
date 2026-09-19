@@ -46,11 +46,31 @@ let indexGeneration = 0;
 let indexingStarted = false;
 const INDEX_CONCURRENCY = 2;
 
+function showFatal(message) {
+  const el = document.getElementById("statusMessage");
+  el.hidden = false;
+  el.textContent = message;
+}
+
+window.addEventListener("error", (e) => showFatal("Something went wrong: " + e.message));
+
+const readyTimer = setTimeout(
+  () => showFatal("Still waiting for Outlook to start the add-in. Try closing and reopening the pane."),
+  10000
+);
+
 Office.onReady((info) => {
-  if (info.host === Office.HostType.Outlook) {
+  clearTimeout(readyTimer);
+  if (info.host !== Office.HostType.Outlook) {
+    showFatal("This add-in only works inside Outlook.");
+    return;
+  }
+  try {
     loadAttachments();
     wireStaticControls();
     Office.context.mailbox.addHandlerAsync(Office.EventType.ItemChanged, onItemChanged);
+  } catch (e) {
+    showFatal("Couldn't read this message's attachments: " + e.message);
   }
 });
 
