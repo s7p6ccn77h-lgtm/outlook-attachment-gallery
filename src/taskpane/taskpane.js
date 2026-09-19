@@ -28,59 +28,15 @@ let threadMode = false;
 let threadGroups = null; // [{ senderName, senderEmail, items: [{ name, size, sourceAttachment }] }]
 let threadStatus = ""; // "" | "loading" | "error"
 
-const BUILD = "4";
-let itemChangedCount = 0;
-let pollSwitchCount = 0;
-let pollTicks = 0;
-let lastItemId = null;
-let handlerStatus = "not registered";
-
-function updateDebug() {
-  const el = document.getElementById("debugInfo");
-  if (!el) return;
-  const item = Office.context.mailbox.item;
-  const subject = item && item.subject ? item.subject : "(none)";
-  el.textContent = `build ${BUILD} | item-changed listener: ${handlerStatus} | event switches: ${itemChangedCount} | poll switches: ${pollSwitchCount} (ticks ${pollTicks}) | subject: ${subject}`;
-}
-
 Office.onReady((info) => {
   if (info.host === Office.HostType.Outlook) {
     loadAttachments();
     wireStaticControls();
-    Office.context.mailbox.addHandlerAsync(Office.EventType.ItemChanged, onItemChanged, (r) => {
-      handlerStatus = r.status === Office.AsyncResultStatus.Succeeded ? "registered" : "FAILED: " + (r.error && r.error.message);
-      updateDebug();
-    });
-    startPolling();
-    updateDebug();
+    Office.context.mailbox.addHandlerAsync(Office.EventType.ItemChanged, onItemChanged);
   }
 });
 
-function currentItemId() {
-  const item = Office.context.mailbox.item;
-  return item && item.itemId ? item.itemId : null;
-}
-
-function startPolling() {
-  lastItemId = currentItemId();
-  setInterval(() => {
-    pollTicks++;
-    const id = currentItemId();
-    if (id && lastItemId && id !== lastItemId) {
-      pollSwitchCount++;
-      refreshForNewItem();
-    }
-    updateDebug();
-  }, 1500);
-}
-
 function onItemChanged() {
-  itemChangedCount++;
-  refreshForNewItem();
-}
-
-function refreshForNewItem() {
-  lastItemId = currentItemId();
   query = "";
   activeType = "all";
   selected = new Set();
@@ -90,7 +46,6 @@ function refreshForNewItem() {
     loadThread();
   }
   loadAttachments();
-  updateDebug();
 }
 
 function wireStaticControls() {
