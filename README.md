@@ -81,7 +81,7 @@ show a highlighted snippet on the card. Every word you type must appear
 somewhere in the name or contents (case-insensitive).
 
 - Readable: `.docx`, `.xlsx` (cell text and sheet names), `.pptx` (slides
-  and notes), text-based `.pdf` (first 150 pages), and `.txt`, `.csv`,
+  and notes), text-based `.pdf` (first 150 pages, via PDF.js 6.3.289), and `.txt`, `.csv`,
   `.tsv`, `.md`, `.json`, `.xml`, `.log`, `.html`.
 - Name-only: images, scanned PDFs (no text layer, would need OCR), legacy
   `.doc`/`.xls`/`.ppt`, password-protected files, and anything over 25 MB.

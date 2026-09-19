@@ -1,11 +1,11 @@
-/* global JSZip, pdfjsLib, DOMParser, TextDecoder */
+/* global JSZip, DOMParser, TextDecoder */
 
-// Bundled in ./vendor (pinned: JSZip 3.10.1, PDF.js 3.11.174) so no third-party CDN ever sees
+// Bundled in ./vendor (pinned: JSZip 3.10.1, PDF.js 6.3.289 legacy build) so no third-party CDN ever sees
 // or can tamper with attachment content. Paths resolve relative to taskpane.html.
 const LIBS = {
-  jszip: "vendor/jszip.min.js?v=7",
-  pdf: "vendor/pdf.min.js?v=7",
-  pdfWorker: "vendor/pdf.worker.min.js?v=7",
+  jszip: "vendor/jszip.min.js?v=9",
+  pdf: "./vendor/pdf.min.mjs?v=9",
+  pdfWorker: "vendor/pdf.worker.min.mjs?v=9",
 };
 
 const TEXT_EXTS = new Set(["txt", "csv", "tsv", "md", "json", "xml", "log", "html", "htm"]);
@@ -91,19 +91,33 @@ async function extractXlsx(bytes) {
   return sheetNames + " " + text;
 }
 
-async function extractPdf(bytes) {
-  await loadScript(LIBS.pdf);
-  pdfjsLib.GlobalWorkerOptions.workerSrc = LIBS.pdfWorker;
-  const pdf = await pdfjsLib.getDocument({ data: bytes, isEvalSupported: false }).promise;
-  const pages = Math.min(pdf.numPages, MAX_PDF_PAGES);
-  const chunks = [];
-  for (let p = 1; p <= pages; p++) {
-    const page = await pdf.getPage(p);
-    const content = await page.getTextContent();
-    chunks.push(content.items.map((it) => it.str).join(" "));
+let pdfjsPromise;
+function loadPdfjs() {
+  if (!pdfjsPromise) {
+    pdfjsPromise = import(LIBS.pdf).then((lib) => {
+      lib.GlobalWorkerOptions.workerSrc = LIBS.pdfWorker;
+      return lib;
+    });
   }
-  await pdf.destroy();
-  return chunks.join(" ");
+  return pdfjsPromise;
+}
+
+async function extractPdf(bytes) {
+  const pdfjsLib = await loadPdfjs();
+  const task = pdfjsLib.getDocument({ data: bytes, isEvalSupported: false });
+  try {
+    const pdf = await task.promise;
+    const pages = Math.min(pdf.numPages, MAX_PDF_PAGES);
+    const chunks = [];
+    for (let p = 1; p <= pages; p++) {
+      const page = await pdf.getPage(p);
+      const content = await page.getTextContent();
+      chunks.push(content.items.map((it) => it.str).join(" "));
+    }
+    return chunks.join(" ");
+  } finally {
+    await task.destroy();
+  }
 }
 
 function extractHtml(bytes) {
