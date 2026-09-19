@@ -1,4 +1,4 @@
-# Attachment Gallery — Outlook add-in
+# Attache — Outlook add-in
 
 A task pane add-in that replaces Outlook's native attachment strip with a
 searchable, filterable, sortable gallery. Matches the mockup: grid/list
@@ -26,7 +26,7 @@ src/taskpane/vendor/       bundled, pinned copies of JSZip and PDF.js + licenses
 privacy.html               privacy policy (served at /privacy.html)
 LICENSE                    all rights reserved
 THIRD_PARTY_NOTICES.md     licenses/checksums for the bundled libraries
-assets/                    icons (blue rounded square, gallery-grid glyph)
+assets/                    icons (blue rounded square, folder glyph)
 package.json               local dev scripts
 ```
 
@@ -49,7 +49,7 @@ server is needed to try it:
   `<Version>` to defeat cached copies of the pane itself.
 
 Then open any received email with attachments — you'll see an
-**Attachments** group with a **Gallery view** button on the ribbon.
+**Attache** group with a **Gallery view** button on the ribbon.
 
 ### Making changes
 
