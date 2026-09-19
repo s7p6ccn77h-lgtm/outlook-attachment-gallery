@@ -91,6 +91,7 @@ function afterLoad() {
     document.getElementById("statusMessage").hidden = false;
     document.getElementById("statusMessage").textContent = "This message has no attachments.";
     document.getElementById("galleryContainer").hidden = true;
+    document.getElementById("galleryContainer").innerHTML = "";
     document.getElementById("controls").hidden = true;
     document.getElementById("typeChips").innerHTML = "";
     updateBulkToolbar();
