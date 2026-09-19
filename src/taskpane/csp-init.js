@@ -3,11 +3,11 @@
 // on screen, what Outlook's environment tries to load that the policy blocks.
 (function () {
   var BASE = "default-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; ";
-  var MS = "https://appsforoffice.microsoft.com";
+  var MS = "https://appsforoffice.microsoft.com https://ajax.aspnetcdn.com"; // Mac office.js loads MicrosoftAjax.js from the latter
   var POLICIES = {
     0: { text: "", note: "No policy (baseline)" },
     1: {
-      note: "Strict: this site + Microsoft only",
+      note: "Strict: this site + Microsoft (incl. Ajax CDN)",
       text: BASE +
         "script-src 'self' " + MS + "; style-src 'self'; img-src 'self' data:; " +
         "connect-src 'self' " + MS + " https://*.microsoft.com https://*.office.com https://*.office.net https://*.outlook.com https://*.live.com; " +

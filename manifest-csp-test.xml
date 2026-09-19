@@ -7,7 +7,7 @@
   xsi:type="MailApp">
 
   <Id>80fa81a9-8cc0-4a6f-8136-6dbb3a35229c</Id>
-  <Version>1.0.0.0</Version>
+  <Version>1.0.1.0</Version>
   <ProviderName>Your Company</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
   <DisplayName DefaultValue="Attaché CSP test" />
@@ -33,7 +33,7 @@
   <FormSettings>
     <Form xsi:type="ItemRead">
       <DesktopSettings>
-        <SourceLocation DefaultValue="https://s7p6ccn77h-lgtm.github.io/outlook-attachment-gallery/src/taskpane/csp-test.html?v=1" />
+        <SourceLocation DefaultValue="https://s7p6ccn77h-lgtm.github.io/outlook-attachment-gallery/src/taskpane/csp-test.html?v=2" />
         <RequestedHeight>250</RequestedHeight>
       </DesktopSettings>
     </Form>
@@ -96,8 +96,8 @@
           <bt:Image id="Icon.80x80" DefaultValue="https://s7p6ccn77h-lgtm.github.io/outlook-attachment-gallery/assets/icon-80.png?v=13" />
         </bt:Images>
         <bt:Urls>
-          <bt:Url id="Commands.Url" DefaultValue="https://s7p6ccn77h-lgtm.github.io/outlook-attachment-gallery/src/taskpane/csp-test.html?v=1" />
-          <bt:Url id="Taskpane.Url" DefaultValue="https://s7p6ccn77h-lgtm.github.io/outlook-attachment-gallery/src/taskpane/csp-test.html?v=1" />
+          <bt:Url id="Commands.Url" DefaultValue="https://s7p6ccn77h-lgtm.github.io/outlook-attachment-gallery/src/taskpane/csp-test.html?v=2" />
+          <bt:Url id="Taskpane.Url" DefaultValue="https://s7p6ccn77h-lgtm.github.io/outlook-attachment-gallery/src/taskpane/csp-test.html?v=2" />
         </bt:Urls>
         <bt:ShortStrings>
           <bt:String id="GroupLabel" DefaultValue="CSP test" />
