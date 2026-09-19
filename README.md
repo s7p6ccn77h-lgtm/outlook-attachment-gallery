@@ -109,9 +109,11 @@ somewhere in the name or contents (case-insensitive).
   styles only from this site; outbound connections only to this site and
   Microsoft's Office/Outlook domains; no forms, plugins, or `<base>`.
   Icons are inline SVG and libraries are bundled, so nothing else is loaded.
-  It was found empirically with the "Attaché CSP test" diagnostic add-in
-  (`manifest-csp-test.xml`, `csp-test.html`, `csp-init.js`), which applies
-  candidate policies and lists what Outlook tries to load that they block.
+  It was found empirically with a temporary "Attaché CSP test" diagnostic
+  add-in that applied candidate policies and listed what Outlook tries to
+  load that they block. Its files are gone from the tree but recoverable
+  from git (`git show 8405b50 --stat`); use the same technique again if the
+  policy ever needs to change.
   Known, harmless: `MicrosoftAjax.js` tries to use `eval` (blocked; Office
   works without it), and in a plain browser (not Outlook) `office.js` also
   trips over a telemetry iframe and one inline style.
