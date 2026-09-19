@@ -71,6 +71,11 @@ manifest.xml`) before pushing.
 - Downloads use `getAttachmentContentAsync`, which returns the file as
   base64 (or a URL for some providers) — that's decoded into a `Blob` and
   triggered as a browser download.
+- **Multi-select download is one zip.** Browsers (Safari/WKWebView inside
+  Outlook in particular) drop all but the first of several downloads
+  started from one click, so selecting more than one file produces a single
+  `<subject> - attachments.zip` (built with the bundled JSZip; duplicate
+  names become `name (2).ext`). One selected file downloads directly.
 
 ## Searching inside documents
 

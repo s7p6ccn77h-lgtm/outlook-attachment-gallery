@@ -3,10 +3,10 @@
 // Bundled in ./vendor (pinned: JSZip 3.10.1, PDF.js 6.3.289 legacy build) so no third-party CDN ever sees
 // or can tamper with attachment content. Paths resolve relative to taskpane.html.
 const LIBS = {
-  jszip: "vendor/jszip.min.js?v=14",
-  pdf: "./vendor/pdf.min.mjs?v=14",
+  jszip: "vendor/jszip.min.js?v=15",
+  pdf: "./vendor/pdf.min.mjs?v=15",
   // Absolute on purpose: a path like "vendor/x.mjs" is a *bare specifier* to import() and fails.
-  pdfWorker: new URL("vendor/pdf.worker.min.mjs?v=14", document.baseURI).href,
+  pdfWorker: new URL("vendor/pdf.worker.min.mjs?v=15", document.baseURI).href,
 };
 
 const TEXT_EXTS = new Set(["txt", "csv", "tsv", "md", "json", "xml", "log", "html", "htm"]);
@@ -146,4 +146,26 @@ async function extractText(name, bytes) {
   else if (ext === "html" || ext === "htm") text = extractHtml(bytes);
   else text = new TextDecoder("utf-8").decode(bytes);
   return text.replace(/\s+/g, " ").trim();
+}
+
+function uniqueName(name, used) {
+  const safe = name.replace(/[\\/]/g, "_");
+  const dot = safe.lastIndexOf(".");
+  const base = dot > 0 ? safe.slice(0, dot) : safe;
+  const ext = dot > 0 ? safe.slice(dot) : "";
+  let candidate = safe;
+  let n = 2;
+  while (used.has(candidate.toLowerCase())) candidate = `${base} (${n++})${ext}`;
+  used.add(candidate.toLowerCase());
+  return candidate;
+}
+
+// Bundles several attachments into one zip (one download = one user gesture; browsers drop the rest
+// when a page starts several downloads at once). Duplicate file names get " (2)", " (3)"...
+async function zipFiles(entries) {
+  await loadScript(LIBS.jszip);
+  const zip = new JSZip();
+  const used = new Set();
+  for (const { name, bytes } of entries) zip.file(uniqueName(name, used), bytes);
+  return zip.generateAsync({ type: "blob", compression: "DEFLATE", compressionOptions: { level: 1 } });
 }

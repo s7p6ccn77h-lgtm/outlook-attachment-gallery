@@ -1,4 +1,4 @@
-/* global Office, document, canExtractText, extractText, base64ToBytes */
+/* global Office, document, canExtractText, extractText, base64ToBytes, zipFiles */
 
 const TYPE_META = {
   docx: { glyph: "word", bg: "var(--blue-bg)", fg: "var(--blue-fg)", label: "Word" },
@@ -391,6 +391,7 @@ function updateBulkToolbar() {
   if (selected.size > 0) {
     toolbar.hidden = false;
     document.getElementById("selectionCount").textContent = selected.size + " selected";
+    document.getElementById("downloadLabel").textContent = selected.size > 1 ? "Download .zip" : "Download";
   } else {
     toolbar.hidden = true;
   }
@@ -398,9 +399,45 @@ function updateBulkToolbar() {
 
 // --- Download ------------------------------------------------------------
 
-function downloadSelected() {
+function saveBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
+
+function zipName() {
+  const subject = (Office.context.mailbox.item && Office.context.mailbox.item.subject) || "";
+  const clean = subject.replace(/[^\w\- ]+/g, "").trim().slice(0, 60);
+  return (clean ? clean + " - " : "") + "attachments.zip";
+}
+
+function setDownloadState(busy, message) {
+  document.getElementById("downloadSelectedBtn").disabled = busy;
+  document.getElementById("selectionCount").textContent = message || selected.size + " selected";
+}
+
+async function downloadSelected() {
   const chosen = rawAttachments.filter((a) => selected.has(a.id));
-  chosen.forEach((a) => downloadAttachment(a));
+  if (chosen.length === 0) return;
+  if (chosen.length === 1) {
+    downloadAttachment(chosen[0]);
+    return;
+  }
+
+  setDownloadState(true, "Preparing zip…");
+  try {
+    const entries = [];
+    for (const a of chosen) entries.push({ name: a.name, bytes: await fetchAttachmentBytes(a) });
+    saveBlob(await zipFiles(entries), zipName());
+    setDownloadState(false);
+  } catch (err) {
+    setDownloadState(false, "Couldn't zip: " + String((err && err.message) || err).slice(0, 100));
+  }
 }
 
 function downloadAttachment(attachment) {
@@ -415,14 +452,7 @@ function downloadAttachment(attachment) {
       return;
     }
 
-    const url = URL.createObjectURL(new Blob([base64ToBytes(content.content)]));
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = attachment.name;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    saveBlob(new Blob([base64ToBytes(content.content)]), attachment.name);
   });
 }
 
