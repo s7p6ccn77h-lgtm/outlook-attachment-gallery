@@ -89,6 +89,13 @@ sender. It works differently from the rest of the add-in:
 
 ## Known limitations to fix before shipping
 
+- **Pane can't follow email switches on personal outlook.live.com.** The
+  manifest declares `SupportsPinning`, but personal Outlook on the web
+  offers no pin control, and Outlook freezes the pane's open email
+  (neither `ItemChanged` nor polling `item.itemId` ever sees a change).
+  Close and reopen **Gallery view** for each email there. Pinning is
+  supported in Outlook for Mac, Windows, and work/school Outlook on the
+  web, where the refresh-on-switch logic should work.
 - **Permissions**: manifest requests `ReadWriteItem`. If you add features
   like moving attachments to OneDrive, you'll need broader Graph permissions
   (and an Azure AD app registration) — Office.js alone can't call Graph.
