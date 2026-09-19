@@ -28,8 +28,11 @@ let threadMode = false;
 let threadGroups = null; // [{ senderName, senderEmail, items: [{ name, size, sourceAttachment }] }]
 let threadStatus = ""; // "" | "loading" | "error"
 
-const BUILD = "3";
+const BUILD = "4";
 let itemChangedCount = 0;
+let pollSwitchCount = 0;
+let pollTicks = 0;
+let lastItemId = null;
 let handlerStatus = "not registered";
 
 function updateDebug() {
@@ -37,7 +40,7 @@ function updateDebug() {
   if (!el) return;
   const item = Office.context.mailbox.item;
   const subject = item && item.subject ? item.subject : "(none)";
-  el.textContent = `build ${BUILD} | item-changed listener: ${handlerStatus} | switches seen: ${itemChangedCount} | subject: ${subject}`;
+  el.textContent = `build ${BUILD} | item-changed listener: ${handlerStatus} | event switches: ${itemChangedCount} | poll switches: ${pollSwitchCount} (ticks ${pollTicks}) | subject: ${subject}`;
 }
 
 Office.onReady((info) => {
@@ -48,12 +51,36 @@ Office.onReady((info) => {
       handlerStatus = r.status === Office.AsyncResultStatus.Succeeded ? "registered" : "FAILED: " + (r.error && r.error.message);
       updateDebug();
     });
+    startPolling();
     updateDebug();
   }
 });
 
+function currentItemId() {
+  const item = Office.context.mailbox.item;
+  return item && item.itemId ? item.itemId : null;
+}
+
+function startPolling() {
+  lastItemId = currentItemId();
+  setInterval(() => {
+    pollTicks++;
+    const id = currentItemId();
+    if (id && lastItemId && id !== lastItemId) {
+      pollSwitchCount++;
+      refreshForNewItem();
+    }
+    updateDebug();
+  }, 1500);
+}
+
 function onItemChanged() {
   itemChangedCount++;
+  refreshForNewItem();
+}
+
+function refreshForNewItem() {
+  lastItemId = currentItemId();
   query = "";
   activeType = "all";
   selected = new Set();
