@@ -7,7 +7,7 @@
 
   <script type="text/javascript" src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
   <link rel="stylesheet" href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-core/11.0.0/css/fabric.min.css" />
-  <link rel="stylesheet" href="taskpane.css?v=5" />
+  <link rel="stylesheet" href="taskpane.css?v=6" />
 </head>
 <body class="ms-Fabric">
 
@@ -30,8 +30,9 @@
   <div id="controls" class="controls">
     <div class="search-box">
       <i class="ms-Icon ms-Icon--Search" aria-hidden="true"></i>
-      <input id="searchInput" type="text" placeholder="Search attachments" />
+      <input id="searchInput" type="text" placeholder="Search names and contents" />
     </div>
+    <p id="searchStatus" class="search-status" hidden></p>
 
     <div id="typeChips" class="type-chips" role="group" aria-label="Filter by file type"></div>
 
@@ -45,10 +46,6 @@
       </select>
     </div>
 
-    <label class="thread-toggle" title="Requires an Exchange mailbox. Files from other messages in the thread are view-only.">
-      <input type="checkbox" id="threadToggle" />
-      Group by sender (whole thread)
-    </label>
   </div>
 
   <div id="bulkToolbar" class="bulk-toolbar" hidden>
@@ -62,6 +59,7 @@
   <main id="statusMessage" class="status-message">Loading attachments&hellip;</main>
   <main id="galleryContainer" class="gallery-container" hidden></main>
 
-  <script type="text/javascript" src="taskpane.js?v=5"></script>
+  <script type="text/javascript" src="extract.js?v=6"></script>
+  <script type="text/javascript" src="taskpane.js?v=6"></script>
 </body>
 </html>

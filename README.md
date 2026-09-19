@@ -3,7 +3,8 @@
 A task pane add-in that replaces Outlook's native attachment strip with a
 searchable, filterable, sortable gallery. Matches the mockup: grid/list
 toggle, file-type color coding, type filter chips, sort by name/type/size,
-multi-select, bulk download, and a whole-thread "group by sender" view.
+multi-select, bulk download, and search across both file names and the
+text inside the documents.
 
 Hosted on GitHub Pages at
 https://s7p6ccn77h-lgtm.github.io/outlook-attachment-gallery/ — repo:
@@ -18,8 +19,9 @@ src/taskpane/taskpane.html the pane's markup
 src/taskpane/taskpane.css  styling (matches the mockup's look)
 src/taskpane/taskpane.js   Office.js logic — reads live attachments off the
                            open email, renders the gallery, handles
-                           search/filter/sort/select/download, and the
-                           EWS-based whole-thread grouping
+                           search/filter/sort/select/download
+src/taskpane/extract.js    pulls plain text out of attachments for content
+                           search (docx/xlsx/pptx via JSZip, pdf via PDF.js)
 assets/                    icons (blue rounded square, gallery-grid glyph)
 package.json               local dev scripts
 ```
@@ -66,31 +68,24 @@ manifest.xml`) before pushing.
   base64 (or a URL for some providers) — that's decoded into a `Blob` and
   triggered as a browser download.
 
-## Group by sender (whole thread)
+## Searching inside documents
 
-The toggle above the gallery pulls in attachments from every message in the
-current conversation, not just the one you have open, and groups them by
-sender. It works differently from the rest of the add-in:
+Typing in the search box matches file names immediately. The first time you
+search, the pane also reads each attachment's contents in the background
+(two at a time) and re-filters as they finish; matches from inside a file
+show a highlighted snippet on the card. Every word you type must appear
+somewhere in the name or contents (case-insensitive).
 
-- It uses EWS (`Office.context.mailbox.makeEwsRequestAsync` with a
-  `GetConversationItems` request keyed on `item.conversationId`), since
-  `item.attachments` only ever covers the open message.
-- **Exchange only.** POP/IMAP accounts and some consumer Outlook.com
-  configurations don't support EWS from an add-in; the toggle shows a clear
-  error state ("Couldn't load the full thread...") rather than failing
-  silently.
-- Files that belong to the **open** message stay fully selectable and
-  downloadable, same as always. Files from **other** messages in the thread
-  are shown so you can see what's there, but are view-only — Office.js can
-  only fetch attachment *content* for the item you currently have open, not
-  arbitrary other messages. Opening that email lets you download it.
-- This is the one part of the add-in that hasn't been tested against a real
-  mailbox (no way to run a live Exchange session from where this was built).
-  The SOAP request shape and response parsing follow Microsoft's documented
-  EWS schema, but if it doesn't work first try, the likely fix is in
-  `parseConversationAttachments()` / `buildGetConversationItemsRequest()` in
-  `taskpane.js` — that's the first place to add a `console.log` of the raw
-  EWS response and compare against what actually came back.
+- Readable: `.docx`, `.xlsx` (cell text and sheet names), `.pptx` (slides
+  and notes), text-based `.pdf` (first 150 pages), and `.txt`, `.csv`,
+  `.tsv`, `.md`, `.json`, `.xml`, `.log`, `.html`.
+- Name-only: images, scanned PDFs (no text layer, would need OCR), legacy
+  `.doc`/`.xls`/`.ppt`, password-protected files, and anything over 25 MB.
+- Everything happens inside the task pane — file contents are never sent
+  anywhere. JSZip and PDF.js are loaded from cdnjs the first time you
+  search, so the pane needs internet access for that.
+- Only the open message's attachments are read, and the index is discarded
+  when you switch emails.
 
 ## Known limitations to fix before shipping
 
@@ -101,10 +96,10 @@ sender. It works differently from the rest of the add-in:
   Close and reopen **Gallery view** for each email there. Pinning is
   supported in Outlook for Mac, Windows, and work/school Outlook on the
   web, where the refresh-on-switch logic should work.
-- **Permissions**: manifest requests `ReadWriteMailbox`, which
-  `makeEwsRequestAsync` (whole-thread view) requires. Moving attachments to
-  OneDrive would additionally need Graph permissions and an Azure AD app
-  registration — Office.js alone can't call Graph.
+- **Permissions**: manifest requests `ReadItem`, which is enough to list
+  and read the open message's attachments. Moving attachments to OneDrive
+  would need Graph permissions and an Azure AD app registration — Office.js
+  alone can't call Graph.
 - **Compose-mode download** isn't wired up — `getAttachmentContentAsync`
   behaves differently before a message is sent, and most galleries only need
   read mode anyway.

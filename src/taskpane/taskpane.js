@@ -1,4 +1,4 @@
-/* global Office, document */
+/* global Office, document, canExtractText, extractText, base64ToBytes */
 
 const TYPE_META = {
   docx: { icon: "ms-Icon--WordDocument", bg: "var(--blue-bg)", fg: "var(--blue-fg)", label: "Word" },
@@ -21,12 +21,11 @@ let activeType = "all";
 let sortBy = "name-asc";
 let selected = new Set();
 
-// Thread mode: aggregate attachments across the whole conversation, grouped by sender.
-// Uses EWS (makeEwsRequestAsync) since Office.js's item.attachments only covers the open
-// message. Exchange-only — not available for POP/IMAP or some consumer Outlook.com accounts.
-let threadMode = false;
-let threadGroups = null; // [{ senderName, senderEmail, items: [{ name, size, sourceAttachment }] }]
-let threadStatus = ""; // "" | "loading" | "error"
+// Content search: attachment id -> { status: "pending" | "done" | "unsupported" | "error", text, lower }
+let contentIndex = new Map();
+let indexGeneration = 0;
+let indexingStarted = false;
+const INDEX_CONCURRENCY = 2;
 
 Office.onReady((info) => {
   if (info.host === Office.HostType.Outlook) {
@@ -41,10 +40,7 @@ function onItemChanged() {
   activeType = "all";
   selected = new Set();
   document.getElementById("searchInput").value = "";
-
-  if (threadMode) {
-    loadThread();
-  }
+  resetIndex();
   loadAttachments();
 }
 
@@ -53,6 +49,8 @@ function wireStaticControls() {
   document.getElementById("listBtn").addEventListener("click", () => setView("list"));
   document.getElementById("searchInput").addEventListener("input", (e) => {
     query = e.target.value;
+    if (query.trim()) startIndexing();
+    updateSearchStatus();
     render();
   });
   document.getElementById("sortSelect").addEventListener("change", (e) => {
@@ -60,7 +58,6 @@ function wireStaticControls() {
     render();
   });
   document.getElementById("downloadSelectedBtn").addEventListener("click", downloadSelected);
-  document.getElementById("threadToggle").addEventListener("change", (e) => setThreadMode(e.target.checked));
 }
 
 function loadAttachments() {
@@ -99,6 +96,7 @@ function afterLoad() {
   }
 
   document.getElementById("controls").hidden = false;
+  updateSearchStatus();
   renderChips();
   render();
 }
@@ -136,16 +134,48 @@ function renderChips() {
   });
 }
 
+// --- Search (names + document contents) ---------------------------------
+
+function searchTerms() {
+  return query.toLowerCase().split(/\s+/).filter(Boolean);
+}
+
+function contentEntry(a) {
+  const e = contentIndex.get(a.id);
+  return e && e.status === "done" ? e : null;
+}
+
+// Every search word must appear in the file name or in the file's text.
+function matchesQuery(a, terms) {
+  if (terms.length === 0) return true;
+  const name = a.name.toLowerCase();
+  const entry = contentEntry(a);
+  return terms.every((t) => name.includes(t) || (entry && entry.lower.includes(t)));
+}
+
+function snippetFor(a, terms) {
+  const entry = contentEntry(a);
+  if (!entry || terms.length === 0) return "";
+  const name = a.name.toLowerCase();
+  const term = terms.find((t) => !name.includes(t) && entry.lower.includes(t));
+  if (!term || entry.lower.length !== entry.text.length) return "";
+  const i = entry.lower.indexOf(term);
+  const start = Math.max(0, i - 30);
+  const end = Math.min(entry.text.length, i + term.length + 50);
+  return (
+    (start > 0 ? "…" : "") +
+    escapeHtml(entry.text.slice(start, i)) +
+    "<mark>" + escapeHtml(entry.text.slice(i, i + term.length)) + "</mark>" +
+    escapeHtml(entry.text.slice(i + term.length, end)) +
+    (end < entry.text.length ? "…" : "")
+  );
+}
+
 function filteredSorted() {
-  let items = rawAttachments.filter((a) => {
-    const matchesType = activeType === "all" || getExt(a.name) === activeType;
-    const matchesQuery = a.name.toLowerCase().includes(query.toLowerCase());
-    return matchesType && matchesQuery;
-  });
-
-  items = items.slice().sort(compareAttachments);
-
-  return items;
+  const terms = searchTerms();
+  return rawAttachments
+    .filter((a) => (activeType === "all" || getExt(a.name) === activeType) && matchesQuery(a, terms))
+    .sort(compareAttachments);
 }
 
 function compareAttachments(a, b) {
@@ -156,6 +186,89 @@ function compareAttachments(a, b) {
   return 0;
 }
 
+function resetIndex() {
+  indexGeneration++;
+  contentIndex = new Map();
+  indexingStarted = false;
+}
+
+function fetchAttachmentBytes(attachment) {
+  return new Promise((resolve, reject) => {
+    Office.context.mailbox.item.getAttachmentContentAsync(attachment.id, (result) => {
+      if (result.status !== Office.AsyncResultStatus.Succeeded) {
+        reject(new Error(result.error && result.error.message));
+        return;
+      }
+      if (result.value.format !== Office.MailboxEnums.AttachmentContentFormat.Base64) {
+        reject(new Error("Attachment content not available as base64"));
+        return;
+      }
+      resolve(base64ToBytes(result.value.content));
+    });
+  });
+}
+
+// Reads attachment contents in the background the first time the user searches.
+function startIndexing() {
+  if (indexingStarted) return;
+  indexingStarted = true;
+  const gen = indexGeneration;
+
+  rawAttachments.forEach((a) => {
+    const readable = canExtractText(a.name, a.size);
+    contentIndex.set(a.id, { status: readable ? "pending" : "unsupported", text: "", lower: "" });
+  });
+
+  const queue = rawAttachments.filter((a) => contentIndex.get(a.id).status === "pending");
+  let next = 0;
+
+  const runNext = () => {
+    if (gen !== indexGeneration || next >= queue.length) return;
+    const a = queue[next++];
+    fetchAttachmentBytes(a)
+      .then((bytes) => extractText(a.name, bytes))
+      .then((text) => {
+        if (gen !== indexGeneration) return;
+        contentIndex.set(a.id, { status: "done", text, lower: text.toLowerCase() });
+      })
+      .catch(() => {
+        if (gen !== indexGeneration) return;
+        contentIndex.set(a.id, { status: "error", text: "", lower: "" });
+      })
+      .then(() => {
+        if (gen !== indexGeneration) return;
+        updateSearchStatus();
+        if (query.trim()) render();
+        runNext();
+      });
+  };
+
+  for (let i = 0; i < INDEX_CONCURRENCY; i++) runNext();
+}
+
+function updateSearchStatus() {
+  const el = document.getElementById("searchStatus");
+  if (!indexingStarted || !query.trim()) {
+    el.hidden = true;
+    return;
+  }
+  const entries = rawAttachments.map((a) => contentIndex.get(a.id)).filter(Boolean);
+  const pending = entries.filter((e) => e.status === "pending").length;
+  const done = entries.filter((e) => e.status === "done").length;
+  const nameOnly = entries.length - done - pending;
+
+  el.hidden = false;
+  if (pending > 0) {
+    el.textContent = `Reading file contents… ${done} of ${done + pending} done`;
+  } else if (nameOnly > 0) {
+    el.textContent = `Searched names and contents of ${done} file${done === 1 ? "" : "s"}; ${nameOnly} matched by name only`;
+  } else {
+    el.textContent = "Searched names and contents";
+  }
+}
+
+// --- Rendering -----------------------------------------------------------
+
 function setView(next) {
   view = next;
   document.getElementById("gridBtn").classList.toggle("view-btn--active", next === "grid");
@@ -165,24 +278,17 @@ function setView(next) {
   render();
 }
 
-function buildCard(a, opts) {
-  const options = opts || {};
+function buildCard(a, terms) {
   const m = meta(a.name);
-  const isSelected = options.selectable !== false && selected.has(a.id);
+  const isSelected = selected.has(a.id);
+  const snippet = snippetFor(a, terms);
 
   const card = document.createElement("div");
-  card.className =
-    "file-card" +
-    (view === "list" ? " list-row" : "") +
-    (isSelected ? " file-card--selected" : "") +
-    (options.selectable === false ? " file-card--disabled" : "");
-  if (options.disabledNote) card.title = options.disabledNote;
+  card.className = "file-card" + (view === "list" ? " list-row" : "") + (isSelected ? " file-card--selected" : "");
 
   const checkbox = document.createElement("div");
   checkbox.className = "file-card__checkbox";
-  if (options.selectable !== false) {
-    checkbox.innerHTML = isSelected ? '<i class="ms-Icon ms-Icon--CheckMark" aria-hidden="true"></i>' : "";
-  }
+  checkbox.innerHTML = isSelected ? '<i class="ms-Icon ms-Icon--CheckMark" aria-hidden="true"></i>' : "";
 
   const icon = document.createElement("div");
   icon.className = "file-icon";
@@ -191,20 +297,20 @@ function buildCard(a, opts) {
 
   const textWrap = document.createElement("div");
   textWrap.className = "file-text";
-  textWrap.innerHTML = `<p class="file-name">${escapeHtml(a.name)}</p><p class="file-meta">${formatSize(a.size)}</p>`;
+  textWrap.innerHTML =
+    `<p class="file-name" title="${escapeHtml(a.name)}">${escapeHtml(a.name)}</p>` +
+    `<p class="file-meta">${formatSize(a.size)}</p>` +
+    (snippet ? `<p class="file-snippet">${snippet}</p>` : "");
 
   card.appendChild(checkbox);
   card.appendChild(icon);
   card.appendChild(textWrap);
 
-  if (options.selectable !== false) {
-    card.addEventListener("click", () => {
-      if (selected.has(a.id)) selected.delete(a.id);
-      else selected.add(a.id);
-      updateBulkToolbar();
-      render();
-    });
-  }
+  card.addEventListener("click", () => {
+    if (selected.has(a.id)) selected.delete(a.id);
+    else selected.add(a.id);
+    render();
+  });
 
   return card;
 }
@@ -212,12 +318,6 @@ function buildCard(a, opts) {
 function render() {
   const container = document.getElementById("galleryContainer");
   container.className = "gallery-container " + view;
-
-  if (threadMode) {
-    renderThreadView(container);
-    return;
-  }
-
   const items = filteredSorted();
 
   if (items.length === 0) {
@@ -226,8 +326,9 @@ function render() {
     return;
   }
 
+  const terms = searchTerms();
   container.innerHTML = "";
-  items.forEach((a) => container.appendChild(buildCard(a)));
+  items.forEach((a) => container.appendChild(buildCard(a, terms)));
   updateBulkToolbar();
 }
 
@@ -241,6 +342,8 @@ function updateBulkToolbar() {
   }
 }
 
+// --- Download ------------------------------------------------------------
+
 function downloadSelected() {
   const chosen = rawAttachments.filter((a) => selected.has(a.id));
   chosen.forEach((a) => downloadAttachment(a));
@@ -251,20 +354,14 @@ function downloadAttachment(attachment) {
     if (result.status !== Office.AsyncResultStatus.Succeeded) return;
 
     const content = result.value;
-    let blob;
 
-    if (content.format === Office.MailboxEnums.AttachmentContentFormat.Base64) {
-      const byteChars = atob(content.content);
-      const byteNumbers = new Array(byteChars.length);
-      for (let i = 0; i < byteChars.length; i++) byteNumbers[i] = byteChars.charCodeAt(i);
-      blob = new Blob([new Uint8Array(byteNumbers)]);
-    } else {
+    if (content.format !== Office.MailboxEnums.AttachmentContentFormat.Base64) {
       // Url format: content.content is a URL Outlook can resolve directly.
       window.open(content.content, "_blank");
       return;
     }
 
-    const url = URL.createObjectURL(blob);
+    const url = URL.createObjectURL(new Blob([base64ToBytes(content.content)]));
     const link = document.createElement("a");
     link.href = url;
     link.download = attachment.name;
@@ -278,201 +375,5 @@ function downloadAttachment(attachment) {
 function escapeHtml(str) {
   const div = document.createElement("div");
   div.textContent = str;
-  return div.innerHTML;
-}
-
-// --- Thread mode ---------------------------------------------------------
-
-function setThreadMode(enabled) {
-  threadMode = enabled;
-  document.getElementById("sortSelect").disabled = enabled;
-  if (enabled) {
-    loadThread();
-  } else {
-    render();
-  }
-}
-
-function loadThread() {
-  threadStatus = "loading";
-  threadGroups = null;
-  render();
-
-  const item = Office.context.mailbox.item;
-  const conversationId = item.conversationId;
-
-  if (!conversationId || !Office.context.mailbox.makeEwsRequestAsync) {
-    threadStatus = "error";
-    render();
-    return;
-  }
-
-  const soap = buildGetConversationItemsRequest(conversationId);
-  Office.context.mailbox.makeEwsRequestAsync(soap, (result) => {
-    if (result.status !== Office.AsyncResultStatus.Succeeded) {
-      threadStatus = "error";
-      render();
-      return;
-    }
-    try {
-      threadGroups = parseConversationAttachments(result.value);
-      threadStatus = "";
-    } catch (e) {
-      threadStatus = "error";
-    }
-    render();
-  });
-}
-
-function buildGetConversationItemsRequest(conversationId) {
-  const escapedId = escapeXml(conversationId);
-  return (
-    '<?xml version="1.0" encoding="utf-8"?>' +
-    '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" ' +
-    'xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types">' +
-    "<soap:Header><t:RequestServerVersion Version=\"Exchange2013\" /></soap:Header>" +
-    "<soap:Body>" +
-    '<GetConversationItems xmlns="http://schemas.microsoft.com/exchange/services/2006/messages" ' +
-    'xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types">' +
-    "<ItemShape>" +
-    "<t:BaseShape>IdOnly</t:BaseShape>" +
-    "<t:AdditionalProperties>" +
-    '<t:FieldURI FieldURI="message:Sender" />' +
-    '<t:FieldURI FieldURI="item:Attachments" />' +
-    "</t:AdditionalProperties>" +
-    "</ItemShape>" +
-    "<Conversations>" +
-    "<t:Conversation>" +
-    `<t:ConversationId Id="${escapedId}" />` +
-    "</t:Conversation>" +
-    "</Conversations>" +
-    "</GetConversationItems>" +
-    "</soap:Body>" +
-    "</soap:Envelope>"
-  );
-}
-
-function escapeXml(str) {
-  return String(str)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
-
-function firstChildByLocalName(node, localName) {
-  for (const child of node.childNodes) {
-    if (child.nodeType === 1 && child.localName === localName) return child;
-  }
-  return null;
-}
-
-// Matches a thread-view attachment back to a live attachment on the open message
-// (by name + size), since the open item is the only one we can download from directly
-// via Office.js — everything else in the thread is read-only until you open that email.
-function matchLiveAttachment(name, size) {
-  return rawAttachments.find((a) => a.name === name && (a.size || 0) === (size || 0)) || null;
-}
-
-function parseConversationAttachments(xmlString) {
-  const doc = new DOMParser().parseFromString(xmlString, "text/xml");
-  const groups = new Map();
-
-  const messageNodes = Array.from(doc.getElementsByTagNameNS("*", "Message")).concat(
-    Array.from(doc.getElementsByTagNameNS("*", "MeetingMessage"))
-  );
-
-  messageNodes.forEach((msgNode) => {
-    const senderNode = firstChildByLocalName(msgNode, "Sender");
-    let senderName = "Unknown sender";
-    let senderEmail = "";
-    if (senderNode) {
-      const mailboxNode = firstChildByLocalName(senderNode, "Mailbox");
-      if (mailboxNode) {
-        const nameNode = firstChildByLocalName(mailboxNode, "Name");
-        const emailNode = firstChildByLocalName(mailboxNode, "EmailAddress");
-        if (nameNode && nameNode.textContent) senderName = nameNode.textContent;
-        if (emailNode && emailNode.textContent) senderEmail = emailNode.textContent;
-      }
-    }
-
-    const attachmentsNode = firstChildByLocalName(msgNode, "Attachments");
-    if (!attachmentsNode) return;
-
-    Array.from(attachmentsNode.childNodes)
-      .filter((n) => n.nodeType === 1 && n.localName === "FileAttachment")
-      .forEach((att) => {
-        const isInlineNode = firstChildByLocalName(att, "IsInline");
-        if (isInlineNode && isInlineNode.textContent === "true") return;
-
-        const nameNode = firstChildByLocalName(att, "Name");
-        const sizeNode = firstChildByLocalName(att, "Size");
-        const name = nameNode ? nameNode.textContent : "(unnamed attachment)";
-        const size = sizeNode ? parseInt(sizeNode.textContent, 10) : 0;
-
-        const key = senderEmail || senderName;
-        if (!groups.has(key)) groups.set(key, { senderName, senderEmail, items: [] });
-        groups.get(key).items.push({ name, size, sourceAttachment: matchLiveAttachment(name, size) });
-      });
-  });
-
-  return Array.from(groups.values())
-    .filter((g) => g.items.length > 0)
-    .sort((a, b) => a.senderName.localeCompare(b.senderName));
-}
-
-function renderThreadView(container) {
-  container.innerHTML = "";
-
-  if (threadStatus === "loading") {
-    container.innerHTML = '<div class="empty-state">Loading the whole thread&hellip;</div>';
-    updateBulkToolbar();
-    return;
-  }
-
-  if (threadStatus === "error" || !threadGroups) {
-    container.innerHTML =
-      '<div class="empty-state">Couldn’t load the full thread (this needs an Exchange mailbox). ' +
-      "Turn off “Group by sender” to see just this message.</div>";
-    updateBulkToolbar();
-    return;
-  }
-
-  const lowerQuery = query.toLowerCase();
-  let anyRendered = false;
-
-  threadGroups.forEach((group) => {
-    const items = group.items
-      .filter((it) => activeType === "all" || getExt(it.name) === activeType)
-      .filter((it) => it.name.toLowerCase().includes(lowerQuery))
-      .slice()
-      .sort(compareAttachments);
-
-    if (items.length === 0) return;
-    anyRendered = true;
-
-    const heading = document.createElement("div");
-    heading.className = "thread-group-heading";
-    heading.textContent = `${group.senderName} (${items.length})`;
-    container.appendChild(heading);
-
-    const groupEl = document.createElement("div");
-    groupEl.className = "gallery-container " + view;
-    items.forEach((it) => {
-      if (it.sourceAttachment) {
-        groupEl.appendChild(buildCard(it.sourceAttachment));
-      } else {
-        groupEl.appendChild(
-          buildCard(it, { selectable: false, disabledNote: "Open that email to download this file" })
-        );
-      }
-    });
-    container.appendChild(groupEl);
-  });
-
-  if (!anyRendered) {
-    container.innerHTML = '<div class="empty-state">No attachments match</div>';
-  }
-
-  updateBulkToolbar();
+  return div.innerHTML.replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
