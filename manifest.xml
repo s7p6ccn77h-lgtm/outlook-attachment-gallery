@@ -7,7 +7,7 @@
   xsi:type="MailApp">
 
   <Id>e4d8f2a1-6b3c-4a9e-9f0d-2c7b8a5e1d34</Id>
-  <Version>1.0.0.0</Version>
+  <Version>1.0.1.0</Version>
   <ProviderName>Your Company</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
   <DisplayName DefaultValue="Attachment Gallery" />
@@ -33,7 +33,7 @@
   <FormSettings>
     <Form xsi:type="ItemRead">
       <DesktopSettings>
-        <SourceLocation DefaultValue="https://s7p6ccn77h-lgtm.github.io/outlook-attachment-gallery/src/taskpane/taskpane.html" />
+        <SourceLocation DefaultValue="https://s7p6ccn77h-lgtm.github.io/outlook-attachment-gallery/src/taskpane/taskpane.html?v=3" />
         <RequestedHeight>250</RequestedHeight>
       </DesktopSettings>
     </Form>
@@ -96,8 +96,8 @@
           <bt:Image id="Icon.80x80" DefaultValue="https://s7p6ccn77h-lgtm.github.io/outlook-attachment-gallery/assets/icon-80.png" />
         </bt:Images>
         <bt:Urls>
-          <bt:Url id="Commands.Url" DefaultValue="https://s7p6ccn77h-lgtm.github.io/outlook-attachment-gallery/src/taskpane/taskpane.html" />
-          <bt:Url id="Taskpane.Url" DefaultValue="https://s7p6ccn77h-lgtm.github.io/outlook-attachment-gallery/src/taskpane/taskpane.html" />
+          <bt:Url id="Commands.Url" DefaultValue="https://s7p6ccn77h-lgtm.github.io/outlook-attachment-gallery/src/taskpane/taskpane.html?v=3" />
+          <bt:Url id="Taskpane.Url" DefaultValue="https://s7p6ccn77h-lgtm.github.io/outlook-attachment-gallery/src/taskpane/taskpane.html?v=3" />
         </bt:Urls>
         <bt:ShortStrings>
           <bt:String id="GroupLabel" DefaultValue="Attachments" />
